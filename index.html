@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>简历工厂 · AI Resume Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --ink:#1a1a1a;
+  --ink2:#555;
+  --ink3:#999;
+  --paper:#fafaf7;
+  --surface:#f2f1ec;
+  --border:#dddbd4;
+  --accent:#2d5a27;
+  --accent2:#4a8f42;
+  --accent-light:#e8f3e6;
+  --red:#c0392b;
+  --mono:'Space Mono',monospace;
+  --sans:'Noto Sans SC',sans-serif;
+  --radius:10px;
+}
+
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+}
+
+/* HEADER */
+.header{
+  background:var(--ink);
+  color:var(--paper);
+  padding:20px 32px 18px;
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  border-bottom:3px solid var(--accent);
+}
+.header-title{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:.05em}
+.header-sub{font-size:12px;opacity:.5;font-family:var(--mono)}
+.header-badge{margin-left:auto;font-family:var(--mono);font-size:10px;background:var(--accent);color:#fff;padding:3px 10px;border-radius:3px;letter-spacing:.08em}
+
+/* API KEY BAR */
+.apikey-bar{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:10px 32px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:12px;
+}
+.apikey-bar label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);white-space:nowrap;margin:0}
+.apikey-bar input{
+  flex:1;max-width:420px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:6px 10px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--ink);
+}
+.apikey-bar input:focus{outline:none;border-color:var(--accent)}
+.apikey-hint{font-size:11px;color:var(--ink3)}
+.apikey-hint a{color:var(--accent);text-decoration:none}
+.apikey-hint a:hover{text-decoration:underline}
+.apikey-status{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px}
+.apikey-status.ok{background:var(--accent-light);color:var(--accent)}
+.apikey-status.missing{background:#fce8e6;color:var(--red)}
+
+/* STEPPER */
+.stepper{
+  display:flex;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+  overflow-x:auto;
+}
+.step-tab{
+  padding:14px 0;margin-right:32px;
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;
+  color:var(--ink3);border-bottom:2px solid transparent;
+  cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;gap:7px;
+  white-space:nowrap;text-transform:uppercase;
+}
+.step-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.step-tab.done{color:var(--ink2)}
+.step-tab.done .step-num{background:var(--accent);color:#fff}
+.step-num{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--border);color:var(--ink3);
+  font-size:10px;display:flex;align-items:center;justify-content:center;
+  font-weight:700;transition:all .2s;
+}
+.step-tab.active .step-num{background:var(--accent);color:#fff}
+
+/* PANEL */
+.panel{display:none;padding:28px 32px 40px;max-width:860px}
+.panel.active{display:block}
+
+.panel-title{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.06em;color:var(--ink);margin-bottom:6px;text-transform:uppercase}
+.panel-desc{font-size:13px;color:var(--ink2);line-height:1.65;margin-bottom:22px}
+.panel-desc strong{color:var(--ink);font-weight:500}
+
+/* FORM */
+label{display:block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);margin-bottom:6px;margin-top:18px}
+label:first-child{margin-top:0}
+
+textarea{
+  width:100%;background:#fff;border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px 14px;
+  font-family:var(--sans);font-size:13px;color:var(--ink);
+  line-height:1.65;resize:vertical;transition:border-color .15s;
+}
+textarea:focus{outline:none;border-color:var(--accent)}
+textarea::placeholder{color:var(--ink3)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 20px;border-radius:var(--radius);font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;border:none}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-primary:disabled{background:var(--border);color:var(--ink3);cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--ink2);color:var(--ink)}
+.btn-row{display:flex;gap:10px;margin-top:22px;align-items:center;flex-wrap:wrap}
+
+/* OUTPUT */
+.output-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:20px;margin-bottom:6px}
+.output-box{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-top:0;font-size:13px;line-height:1.8;color:var(--ink);min-height:100px;white-space:pre-wrap;word-break:break-word;position:relative}
+
+/* PROGRESS */
+.progress-bar{height:3px;background:var(--border);border-radius:2px;margin:10px 0;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width .4s}
+
+/* INFO BOX */
+.info-box{background:var(--accent-light);border:1px solid #c3dfc0;border-radius:var(--radius);padding:12px 16px;font-size:12px;color:var(--accent);line-height:1.65;margin-bottom:20px}
+.info-box strong{font-weight:700}
+
+.tip{font-size:11px;color:var(--ink3);line-height:1.65;margin-top:10px;font-style:italic}
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+/* TONE */
+.tone-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.tone-card{padding:12px 14px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;background:#fff}
+.tone-card:hover{border-color:var(--accent)}
+.tone-card.selected{border-color:var(--accent);background:var(--accent-light)}
+.tone-card-title{font-size:13px;font-weight:500;color:var(--ink)}
+.tone-card-desc{font-size:11px;color:var(--ink3);margin-top:3px}
+
+/* COPY */
+.copy-btn{position:absolute;top:12px;right:12px;padding:4px 10px;font-family:var(--mono);font-size:10px;font-weight:700;background:var(--surface);color:var(--ink2);border:1px solid var(--border);border-radius:5px;cursor:pointer;letter-spacing:.05em;transition:all .15s}
+.copy-btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+
+/* MOBILE */
+@media(max-width:600px){
+  .header{padding:16px 18px}
+  .apikey-bar{padding:10px 18px;flex-wrap:wrap}
+  .stepper{padding:0 18px}
+  .panel{padding:20px 18px 40px}
+  .tone-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-title">简历工厂</span>
+  <span class="header-sub">/ Resume Factory</span>
+  <span class="header-badge">AI POWERED</span>
+</div>
+
+<div class="apikey-bar">
+  <label>API Key</label>
+  <input type="password" id="api-key" placeholder="sk-ant-api03-..." oninput="checkKey()">
+  <span class="apikey-status missing" id="key-status">未填写</span>
+  <span class="apikey-hint">没有Key？→ <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> 免费注册获取</span>
+</div>
+
+<div class="stepper">
+  <div class="step-tab active" id="tab-1" onclick="goStep(1)"><span class="step-num">1</span>简历母版</div>
+  <div class="step-tab" id="tab-2" onclick="goStep(2)"><span class="step-num">2</span>JD解析</div>
+  <div class="step-tab" id="tab-3" onclick="goStep(3)"><span class="step-num">3</span>生成简历</div>
+</div>
+
+<!-- STEP 1 -->
+<div class="panel active" id="panel-1">
+  <div class="panel-title">建立你的简历母版</div>
+  <div class="panel-desc">把你所有的工作经历都填进来，<strong>越详细越好</strong>。这是一次性工程——之后投任何岗位，AI都从这里取材，你不用再重复填写。</div>
+
+  <div class="info-box">
+    <strong>💡 母版 ≠ 简历</strong><br>
+    母版是你的"经历全库"，可以包含10段经历。最终的简历AI只会挑最匹配的5-6条。每条经历尽量带上数字和结果，改写时AI才有料可用。
+  </div>
+
+  <label>基本信息</label>
+  <textarea id="basic-info" rows="2" placeholder="姓名 / 联系方式 / 城市 / 求职意向（可以写多个，例如：高级产品经理、产品总监）"></textarea>
+
+  <label>工作经历（全部写下来，每段之间空一行）</label>
+  <textarea id="work-exp" rows="10" placeholder="格式建议：
+时间 | 公司名 | 职位
+- 负责XX，结果是XX（尽量带数字）
+- 主导XX项目，提升了XX%
+- 管理X人团队，做了什么
+
+下一段经历
+..."></textarea>
+
+  <label>项目 / 实习 / 其他亮点（奖项、开源、副业、演讲等）</label>
+  <textarea id="project-exp" rows="4" placeholder="例：
+2023年 | 独立开发效率工具，上线3个月2000+用户
+2022年 | XX大赛全国前10，项目方向是..."></textarea>
+
+  <label>技能 & 工具</label>
+  <textarea id="skills" rows="2" placeholder="例：产品规划、数据分析（SQL/Python）、Figma、英语CET-6（可流利书面沟通）"></textarea>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="saveStep1()">保存母版，去解析JD →</button>
+    <button class="btn btn-ghost" onclick="loadSample()">填入示例数据</button>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="panel" id="panel-2">
+  <div class="panel-title">解析目标 JD</div>
+  <div class="panel-desc">粘贴你要投的职位描述，AI会提取<strong>硬性要求、加分项、公司调性和简历建议</strong>，为下一步量身定制做准备。</div>
+
+  <label>粘贴 JD 全文</label>
+  <textarea id="jd-input" rows="10" placeholder="把招聘网站的职位描述完整粘贴进来（岗位职责 + 任职要求 都要）..."></textarea>
+
+  <label>你对这家公司 / HC 的额外了解（可选）</label>
+  <textarea id="hc-notes" rows="2" placeholder="例：通过内推，HR提到很看重数据驱动；或者：这家公司最近在做AI转型，HC偏爱有AI产品经验的候选人"></textarea>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="analyze-btn" onclick="analyzeJD()">
+      <span id="analyze-btn-text">AI 解析 JD →</span>
+    </button>
+    <button class="btn btn-ghost" onclick="goStep(1)">← 修改母版</button>
+  </div>
+
+  <div id="jd-result" style="display:none">
+    <div class="divider"></div>
+    <div class="output-label">解析结果</div>
+    <div class="progress-bar"><div class="progress-fill" id="jd-progress"></div></div>
+    <div class="output-box" id="jd-output"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goStep(3)">用这份解析生成简历 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="panel" id="panel-3">
+  <div class="panel-title">生成定制简历</div>
+  <div class="panel-desc">选择简历调性，AI从你的母版中挑选最匹配的经历，针对这个岗位改写和排序。</div>
+
+  <label>简历调性</label>
+  <div class="tone-grid">
+    <div class="tone-card selected" id="tone-bigco" onclick="selectTone('bigco')">
+      <div class="tone-card-title">大厂风格</div>
+      <div class="tone-card-desc">数据驱动，结果导向，强调规模与影响力</div>
+    </div>
+    <div class="tone-card" id="tone-startup" onclick="selectTone('startup')">
+      <div class="tone-card-title">创业公司</div>
+      <div class="tone-card-desc">灵活全面，强调独立推动和商业嗅觉</div>
+    </div>
+    <div class="tone-card" id="tone-foreign" onclick="selectTone('foreign')">
+      <div class="tone-card-title">外企 / 跨国</div>
+      <div class="tone-card-desc">国际化视野，注重流程规范和跨文化协作</div>
+    </div>
+    <div class="tone-card" id="tone-conservative" onclick="selectTone('conservative')">
+      <div class="tone-card-title">传统行业</div>
+      <div class="tone-card-desc">稳重专业，强调责任心、执行力和专业积累</div>
+    </div>
+  </div>
+
+  <label style="margin-top:20px">额外要求（可选）</label>
+  <textarea id="extra-req" rows="2" placeholder="例：篇幅控制在一页；重点突出管理经验；语气正式一些；不要提XX竞品公司名称"></textarea>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="gen-btn" onclick="generateResume()">
+      <span id="gen-btn-text">生成定制简历 →</span>
+    </button>
+    <button class="btn btn-ghost" onclick="goStep(2)">← 重新解析 JD</button>
+  </div>
+
+  <div id="resume-result" style="display:none">
+    <div class="divider"></div>
+    <div class="output-label">你的定制简历</div>
+    <div class="progress-bar"><div class="progress-fill" id="resume-progress"></div></div>
+    <div class="output-box" id="resume-output">
+      <button class="copy-btn" onclick="copyResume()">复制全文</button>
+      <div id="resume-content"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="generateResume()">重新生成</button>
+      <button class="btn btn-ghost" onclick="goStep(2)">换一个 JD 投</button>
+    </div>
+    <p class="tip">✦ 复制后粘贴到 Word / 飞书文档进行排版。每次海投新岗位只需重复步骤 2-3，母版无需重填。</p>
+  </div>
+</div>
+
+<script>
+const state = { step:1, tone:'bigco', jdAnalysis:'', resumeData:{} };
+
+const toneMap = {
+  bigco:'大厂风格（数据驱动，结果导向，强调规模和影响力，用词精准有力）',
+  startup:'创业公司风格（灵活全面，强调独立推动能力、0到1经验和商业嗅觉）',
+  foreign:'外企/跨国风格（国际化视野，注重流程规范、跨文化协作，表达清晰正式）',
+  conservative:'传统行业风格（稳重专业，强调责任心、执行力和深厚专业积累）'
+};
+
+function checkKey(){
+  const v = document.getElementById('api-key').value.trim();
+  const s = document.getElementById('key-status');
+  if(v.startsWith('sk-ant-') || v.startsWith('sk-')){
+    s.className='apikey-status ok'; s.textContent='已填写 ✓';
+  } else {
+    s.className='apikey-status missing'; s.textContent='未填写';
+  }
+}
+
+function getKey(){
+  return document.getElementById('api-key').value.trim();
+}
+
+function goStep(n){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.step-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+  document.getElementById('tab-'+n).classList.add('active');
+  state.step=n;
+  for(let i=1;i<n;i++) document.getElementById('tab-'+i).classList.add('done');
+}
+
+function selectTone(t){
+  state.tone=t;
+  document.querySelectorAll('.tone-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('tone-'+t).classList.add('selected');
+}
+
+function saveStep1(){
+  const w=document.getElementById('work-exp').value.trim();
+  if(!w){alert('请先填写工作经历');return;}
+  state.resumeData={
+    basic:document.getElementById('basic-info').value,
+    work:w,
+    project:document.getElementById('project-exp').value,
+    skills:document.getElementById('skills').value
+  };
+  goStep(2);
+  document.getElementById('tab-1').classList.add('done');
+}
+
+function loadSample(){
+  document.getElementById('basic-info').value='张晓明 / xiaoming@email.com / 北京 / 求职意向：高级产品经理、产品总监';
+  document.getElementById('work-exp').value=`2021.06 - 至今 | ABC科技（B端SaaS） | 高级产品经理
+- 主导核心SaaS产品从0到1，上线12个月DAU突破80万，付费转化率4.2%
+- 负责AI功能模块规划，推动3项核心功能落地，用户留存率提升18%
+- 管理5人产品团队，建立PRD标准化流程，迭代效率提升40%
+- 与BD协作推进2个大客户定制项目，合同总额超800万
+
+2018.07 - 2021.05 | DEF互联网 | 产品经理
+- 负责电商搜索与推荐模块，主导AB实验50+，点击率提升25%
+- 主导商家后台全面改版，NPS提升12分，客诉率下降30%
+- 协调研发/设计/数据3个团队，独立推动5个项目从立项到上线`;
+  document.getElementById('project-exp').value=`2020年 | 个人项目：效率工具"TaskFlow"，上线6个月3000+用户，App Store评分4.6
+2022年 | 受邀在产品100论坛分享"AI产品设计方法论"，参与者500+`;
+  document.getElementById('skills').value='B端/C端产品设计、数据分析（SQL、Python基础）、原型设计（Figma、Axure）、用户研究、英语CET-6（可流利书面沟通）';
+}
+
+async function callClaude(messages, onChunk){
+  const key=getKey();
+  if(!key){
+    alert('请先在顶部填写 Anthropic API Key');
+    throw new Error('no key');
+  }
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:2000,
+      stream:true,
+      messages
+    })
+  });
+  if(!res.ok){
+    const err=await res.text();
+    throw new Error('API错误 '+res.status+': '+err);
+  }
+  const reader=res.body.getReader();
+  const dec=new TextDecoder();
+  let buf='';
+  while(true){
+    const{done,value}=await reader.read();
+    if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n');
+    buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data:')) continue;
+      const d=line.slice(5).trim();
+      if(d==='[DONE]') return;
+      try{
+        const j=JSON.parse(d);
+        if(j.type==='content_block_delta'&&j.delta?.text) onChunk(j.delta.text);
+      }catch(e){}
+    }
+  }
+}
+
+async function analyzeJD(){
+  const jd=document.getElementById('jd-input').value.trim();
+  if(!jd){alert('请先粘贴JD内容');return;}
+
+  const btn=document.getElementById('analyze-btn');
+  btn.disabled=true;
+  document.getElementById('analyze-btn-text').innerHTML='<span class="spinner"></span> 解析中...';
+
+  const resultDiv=document.getElementById('jd-result');
+  resultDiv.style.display='block';
+  const out=document.getElementById('jd-output');
+  out.textContent='正在分析...';
+
+  const prog=document.getElementById('jd-progress');
+  let p=0;
+  const t=setInterval(()=>{if(p<82){p+=2;prog.style.width=p+'%'}},250);
+
+  try{
+    let text='';
+    out.textContent='';
+    await callClaude([{role:'user',content:`你是一个资深HR和招聘专家，请分析以下JD，用中文输出结构化分析。
+
+JD内容：
+${jd}
+
+${document.getElementById('hc-notes').value?'求职者补充信息：'+document.getElementById('hc-notes').value:''}
+
+请严格按以下格式输出（纯文本，不要用markdown符号如**或##）：
+
+【硬性要求】（必须匹配，3-5条）
+• [要求1]
+• [要求2]
+• ...
+
+【加分项】（有最好，没有也行，3-4条）
+• [加分项1]
+• ...
+
+【公司/岗位调性】
+[2-3个关键词，用·分隔，例如：数据驱动 · 快节奏 · 注重执行力]
+
+【这个岗位最怕什么候选人】
+[1-2句话，反向分析帮助求职者规避简历雷区]
+
+【简历写作建议】
+[针对这个JD，简历应该重点突出什么，2-3句话的具体建议]`}],
+    chunk=>{text+=chunk;out.textContent=text;state.jdAnalysis=text;}
+    );
+    clearInterval(t);prog.style.width='100%';
+  }catch(e){
+    if(e.message!=='no key') out.textContent='解析失败：'+e.message;
+    clearInterval(t);
+  }
+  btn.disabled=false;
+  document.getElementById('analyze-btn-text').textContent='AI 解析 JD →';
+}
+
+async function generateResume(){
+  const d=state.resumeData;
+  if(!d.work){alert('请先完成步骤1，填写简历母版');goStep(1);return;}
+  if(!state.jdAnalysis){alert('请先完成步骤2，解析JD');goStep(2);return;}
+
+  const btn=document.getElementById('gen-btn');
+  btn.disabled=true;
+  document.getElementById('gen-btn-text').innerHTML='<span class="spinner"></span> 生成中...';
+
+  document.getElementById('resume-result').style.display='block';
+  const content=document.getElementById('resume-content');
+  content.textContent='';
+
+  const prog=document.getElementById('resume-progress');
+  let p=0;
+  const t=setInterval(()=>{if(p<78){p+=1.5;prog.style.width=p+'%'}},300);
+
+  try{
+    let text='';
+    await callClaude([{role:'user',content:`你是一个顶级简历优化专家。请帮我生成一份针对特定岗位的定制简历。
+
+【我的简历母版】
+基本信息：${d.basic||'（未填写）'}
+
+工作经历：
+${d.work}
+
+项目经历：
+${d.project||'（无）'}
+
+技能：
+${d.skills||'（未填写）'}
+
+【JD分析结果】
+${state.jdAnalysis}
+
+【简历调性要求】
+${toneMap[state.tone]}
+
+${document.getElementById('extra-req').value?'【额外要求】\n'+document.getElementById('extra-req').value:''}
+
+请生成一份完整的简历正文，严格要求：
+1. 从母版中挑选最匹配该岗位的4-6条经历，不要全部堆砌
+2. 改写每条经历，让关键词自然对齐JD需求，同时保持真实不夸大
+3. 按所选调性调整语气和表达方式
+4. 开头写一段个人简介（50字以内），精准对应岗位需求
+5. 技能栏按该岗位优先级重新排序
+
+输出格式（纯文本，层次清晰，不要用markdown符号）：
+
+个人简介
+[内容]
+
+工作经历
+
+[公司名 | 职位 | 时间段]
+• [成果1]
+• [成果2]
+• [成果3]
+
+[下一段工作经历...]
+
+项目经历（仅保留相关的）
+
+[项目名 | 时间]
+• [描述]
+
+技能
+[按优先级列出]
+
+---
+选材说明：[用1-2句话说明选了哪些经历、为什么这样选，以及哪些没选的原因]`}],
+    chunk=>{text+=chunk;content.textContent=text;}
+    );
+    clearInterval(t);prog.style.width='100%';
+  }catch(e){
+    if(e.message!=='no key') content.textContent='生成失败：'+e.message;
+    clearInterval(t);
+  }
+  btn.disabled=false;
+  document.getElementById('gen-btn-text').textContent='生成定制简历 →';
+}
+
+function copyResume(){
+  const text=document.getElementById('resume-content').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.querySelector('.copy-btn');
+    btn.textContent='已复制 ✓';
+    setTimeout(()=>btn.textContent='复制全文',2000);
+  });
+}
+</script>
+</body>
+</html>
